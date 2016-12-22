@@ -10,16 +10,22 @@ package es.ucm.povale.reader;
  * @author Laura Hernando y Daniel Rossetto
  */
 public class Var {
+    private String label;
     private String name;
     private String description;
     private String type;
 
-    public Var(String name, String description, String type) {
+    public Var(String label, String name, String description, String type) {
+        this.label = label;
         this.name = name;
         this.description = description;
         this.type = type;
     }
-        
+
+    public String getLabel() {
+        return label;
+    }
+    
     public String getName() {
         return name;
     }
