@@ -31,18 +31,27 @@ import es.ucm.povale.term.Term;
  */
 public class AssertParser {
 
+    public String getMessage(Element el){
+        String message = el.getAttribute("msg");
+        if(message == "")
+            return null;
+        return message;
+    }
     public Assertion createAssertFalse(Element el) {
-        return new AssertFalse();
+        String message = getMessage(el);
+        return new AssertFalse(message);
     }
 
     public Assertion createAssertTrue(Element el) {
-        return new AssertTrue();
+        String message = getMessage(el);
+        return new AssertTrue(message);
     }
 
     public Assertion createNotAssert(Element el) {
         XMLParser parser = new XMLParser();
         NodeList nl = el.getChildNodes();
         Assertion assertion = null;
+        String message = getMessage(el);
         if (nl != null && nl.getLength() > 0) {
             for (int i = 0; i < nl.getLength(); i++) {
                 if (!nl.item(i).getNodeName().equalsIgnoreCase("#text")) {
@@ -50,13 +59,14 @@ public class AssertParser {
                 }
             }
         }
-        return new Not(assertion);
+        return new Not(assertion, message);
     }
 
     public Assertion createAndAssert(Element el) {
         XMLParser parser = new XMLParser();
         List<Assertion> assertions = new LinkedList();
         NodeList nl = el.getChildNodes();
+        String message = getMessage(el);
         if (nl != null && nl.getLength() > 0) {
             for (int i = 0; i < nl.getLength(); i++) {
                 if (!nl.item(i).getNodeName().equalsIgnoreCase("#text")) {
@@ -65,7 +75,7 @@ public class AssertParser {
                 }
             }
         }
-        return new And(assertions);
+        return new And(assertions, message);
     }
 
     public Assertion createOrAssert(Element el) {
@@ -73,6 +83,8 @@ public class AssertParser {
         XMLParser parser = new XMLParser();
         List<Assertion> assertions = new LinkedList();
         NodeList nl = el.getChildNodes();
+        String message = getMessage(el);
+        
         if (nl != null && nl.getLength() > 0) {
             for (int i = 0; i < nl.getLength(); i++) {
                 if (!nl.item(i).getNodeName().equalsIgnoreCase("#text")) {
@@ -81,7 +93,7 @@ public class AssertParser {
                 }
             }
         }
-        return new Or(assertions);
+        return new Or(assertions, message);
     }
 
     public Assertion createEntailAssert(Element el) {
@@ -89,6 +101,8 @@ public class AssertParser {
         NodeList nodeList = el.getChildNodes();
         Element element = null;
         Assertion leftAssert = null, rightAssert = null;
+        String message = getMessage(el);
+        
         if (nodeList != null && nodeList.getLength() > 0) {
             for (int i = 0; i < nodeList.getLength(); i++) {
                 if (!nodeList.item(i).getNodeName().equalsIgnoreCase("#text")) {
@@ -108,7 +122,7 @@ public class AssertParser {
                 }
             }
         }
-        return new Entail(leftAssert, rightAssert);
+        return new Entail(leftAssert, rightAssert, message);
     }
 
     public Assertion createEqualsAssert(Element el) {
@@ -116,6 +130,8 @@ public class AssertParser {
         NodeList nodeList = el.getChildNodes();
         Element element = null;
         Term leftTerm = null, rightTerm = null;
+        String message = getMessage(el);
+       
         if (nodeList != null && nodeList.getLength() > 0) {
             for (int i = 0; i < nodeList.getLength(); i++) {
                 if (!nodeList.item(i).getNodeName().equalsIgnoreCase("#text")) {
@@ -135,7 +151,7 @@ public class AssertParser {
                 }
             }
         }
-        return new Equals(leftTerm, rightTerm);
+        return new Equals(leftTerm, rightTerm, message);
     }
 
     public Assertion createExistAssert(Element el) {
@@ -145,6 +161,8 @@ public class AssertParser {
         Term term = null;
         Assertion assertion = null;
         ArrayList<Integer> existPos = new ArrayList<>();
+        String message = getMessage(el);
+        
         if (existElements != null && existElements.getLength() > 0) {
             for (int j = 0; j < existElements.getLength(); j++) {
                 if (!existElements.item(j).getNodeName().equalsIgnoreCase("#text")) {
@@ -156,7 +174,7 @@ public class AssertParser {
             assertion = parser.getAssertion((Element) existElements.item(existPos.get(2)));
         }
 
-        return new Exist(variable, term, assertion);
+        return new Exist(variable, term, assertion, message);
     }
 
     public Assertion createExistOneAssert(Element el) {
@@ -166,6 +184,8 @@ public class AssertParser {
         Term term = null;
         Assertion assertion = null;
         ArrayList<Integer> existPos = new ArrayList<>();
+        String message = getMessage(el);
+        
         if (existElements != null && existElements.getLength() > 0) {
             for (int j = 0; j < existElements.getLength(); j++) {
                 if (!existElements.item(j).getNodeName().equalsIgnoreCase("#text")) {
@@ -176,7 +196,7 @@ public class AssertParser {
             term = parser.getTerm((Element) existElements.item(existPos.get(1)));
             assertion = parser.getAssertion((Element) existElements.item(existPos.get(2)));
         }
-        return new ExistOne(variable, term, assertion);
+        return new ExistOne(variable, term, assertion, message);
     }
 
     public Assertion createForAllAssert(Element el) {
@@ -186,6 +206,8 @@ public class AssertParser {
         Term term = null;
         Assertion assertion = null;
         ArrayList<Integer> existPos = new ArrayList<>();
+        String message = getMessage(el);
+        
         if (forAllElements != null && forAllElements.getLength() > 0) {
             for (int j = 0; j < forAllElements.getLength(); j++) {
                 if (!forAllElements.item(j).getNodeName().equalsIgnoreCase("#text")) {
@@ -196,7 +218,7 @@ public class AssertParser {
             term = parser.getTerm((Element) forAllElements.item(existPos.get(1)));
             assertion = parser.getAssertion((Element) forAllElements.item(existPos.get(2)));
         }
-        return new ForAll(variable, term, assertion);
+        return new ForAll(variable, term, assertion, message);
     }
 
     public Assertion createPredicateApplication(Element el) {
@@ -204,6 +226,8 @@ public class AssertParser {
         String predicate = null;
         List<Term> predicateTerms = new LinkedList();
         NodeList nodeList = el.getChildNodes();
+        String message = getMessage(el);
+        
         if (nodeList != null && nodeList.getLength() > 0) {
             for (int i = 0; i < nodeList.getLength(); i++) {
                 if (!nodeList.item(i).getNodeName().equalsIgnoreCase("#text")) {
@@ -222,7 +246,7 @@ public class AssertParser {
                 }
             }
         }
-        return new PredicateApplication(predicate, predicateTerms);
+        return new PredicateApplication(predicate, predicateTerms, message);
     }
 
 }
