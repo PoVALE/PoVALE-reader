@@ -5,6 +5,8 @@
  */
 package es.ucm.povale.reader;
 
+import java.util.Map;
+
 /**
  *
  * @author Laura Hernando y Daniel Rossetto
@@ -14,12 +16,14 @@ public class Var {
     private String name;
     private String description;
     private String type;
+    private Map<String,String> parameters;
 
-    public Var(String label, String name, String description, String type) {
+    public Var(String label, String name, String description, String type, Map<String,String> parameters) {
         this.label = label;
         this.name = name;
         this.description = description;
         this.type = type;
+        this.parameters = parameters;
     }
 
     public String getLabel() {
@@ -49,5 +53,15 @@ public class Var {
     public void setType(String type) {
         this.type = type;
     }
+
+    public Map<String, String> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(Map<String, String> parameters) {
+        this.parameters = parameters;
+    }
+    
+    
 
 }
