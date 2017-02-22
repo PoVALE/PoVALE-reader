@@ -145,7 +145,7 @@ public class XMLParser {
                 String description = nol.item(var.get(2)).getTextContent();
                 String entityType = nol.item(var.get(3)).getTextContent();
                 Map<String,String> parameters = new HashMap<>();
-                myVars.add(new Var(label, name, description, entityType, parameters));
+                myVars.add(new Var(label, name, description, entityType));
             }
         }
     }
