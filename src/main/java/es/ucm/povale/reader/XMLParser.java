@@ -27,6 +27,7 @@ import org.xml.sax.SAXException;
 
 import es.ucm.povale.assertion.Assertion;
 import es.ucm.povale.term.Term;
+import java.io.InputStream;
 
 /**
  *
@@ -72,13 +73,13 @@ public class XMLParser {
 
     }
 
-    public void parseXMLFile(String XMLPath) {
+    public void parseXMLFile(InputStream input) {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
-            Document dom = db.parse(XMLPath);
+            Document dom = db.parse(input);
             Element document = dom.getDocumentElement();
             readPlugins(document);
             readRootFile(document);
