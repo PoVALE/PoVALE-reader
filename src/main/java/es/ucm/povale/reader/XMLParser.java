@@ -6,6 +6,7 @@
 package es.ucm.povale.reader;
 
 import es.ucm.povale.Var;
+import es.ucm.povale.assertInformation.AssertInformation;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -40,13 +41,16 @@ public class XMLParser {
     private String rootFile;
     private List<Assertion> myAsserts;
     private Map<String, Function<Element, Term>> termsMap;
-    private Map<String, Function<Element, Assertion>> assertsMap;
-
+    private Map<String, Function<Element, AssertNode>> assertsMap;
+    private AssertNode myRequirements;
+    private Map<String, String> defaultMessages;
+    
     public XMLParser() {
 
         this.myAsserts = new LinkedList();
         this.myPlugins = new LinkedList();
         this.myVars = new LinkedList();
+        myRequirements = new AssertNode(null, "Se deben cumplir los siguientes requisitos:");
         this.rootFile = "";
 
         this.termsMap = new HashMap<>();
@@ -70,16 +74,29 @@ public class XMLParser {
         assertsMap.put("existOne", assertParser::createExistOneAssert);
         assertsMap.put("forAll", assertParser::createForAllAssert);
         assertsMap.put("predicateApplication", assertParser::createPredicateApplication);
+        
+        this.defaultMessages = new HashMap<>();
+        defaultMessages.put("assertFalse", "Nunca se cumple esta condicion");
+        defaultMessages.put("assertTrue", "Siempre se cumple esta condicion");
+        defaultMessages.put("not", "No se debe cumplir la siguiente condicion:");
+        defaultMessages.put("and", "Se deben cumplir las siguientes condiciones:");
+        defaultMessages.put("or", "Debe cumplirse al menos una de las siguientes condiciones:");
+        defaultMessages.put("entail", "El elemento 1 implica al elemento 2");
+        defaultMessages.put("equals", "El elemento 1 no es igual al elemento 2");
+        defaultMessages.put("exist", "Existe un elemento X que cumple:");
+        defaultMessages.put("existOne", "Existe solo un elemento X que cumple:");
+        defaultMessages.put("forAll", "Para todo elemento X cumple:");
+        defaultMessages.put("predicateApplication", "Funcion de predicado...");
 
     }
 
-    public void parseXMLFile(InputStream input) {
+    public void parseXMLFile(InputStream is) {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
         try {
             DocumentBuilder db = dbf.newDocumentBuilder();
-            Document dom = db.parse(input);
+            Document dom = db.parse(is);
             Element document = dom.getDocumentElement();
             readPlugins(document);
             readRootFile(document);
@@ -97,10 +114,12 @@ public class XMLParser {
         return t;
     }
 
-    protected Assertion getAssertion(Element element) {
+    protected AssertNode getAssertion(Element element) {
         String assertion = element.getTagName();
-        Function<Element, Assertion> assertParserFunction = this.assertsMap.get(assertion);
-        Assertion a = assertParserFunction.apply(element);
+        Function<Element, AssertNode> assertParserFunction = this.assertsMap.get(assertion);
+        AssertNode a = assertParserFunction.apply(element);
+        if (a.getMessage() == null)
+            a.setMessage(this.defaultMessages.get(assertion));
         return a;
     }
 
@@ -111,9 +130,11 @@ public class XMLParser {
                 NodeList nol = nl.item(i).getChildNodes();
                 for (int j = 0; j < nol.getLength(); j++) {
                     if (!nol.item(j).getNodeName().equalsIgnoreCase("#text")) {
-                        Element el = (Element) nol.item(j);
-                        Assertion e = getAssertion(el);
-                        myAsserts.add(e);
+                        Element el = (Element) nol.item(j);       
+                        AssertNode assertNode = getAssertion(el);
+                        Assertion a = assertNode.getAssertion();
+                        myAsserts.add(a);
+                        myRequirements.addChild(assertNode);
                     }
                 }
             }
@@ -145,7 +166,23 @@ public class XMLParser {
                 String description = nol.item(var.get(2)).getTextContent();
                 String entityType = nol.item(var.get(3)).getTextContent();
                 Map<String,String> parameters = new HashMap<>();
-                myVars.add(new Var(label, name, description, entityType));
+                if(nol.getLength() == 5){
+                    NodeList params = nol.item(var.get(4)).getChildNodes();
+                        if(params.getLength() > 0) 
+                            for(int j = 0 ; j < params.getLength(); i++) 
+                                if(!params.item(i).getNodeName().equalsIgnoreCase("#text")){
+                                    Element e = (Element)params.item(i);
+                                    String key = e.getTagName();
+                                    parameters.put(key, e.getAttribute(key));
+                                }
+                    if (parameters.isEmpty())
+                        myVars.add(new Var(label, name, description, entityType));
+                    else{
+                        myVars.add(new Var(label, name, description, entityType, parameters));
+                    }
+                } else{
+                    myVars.add(new Var(label, name, description, entityType));
+                }
             }
         }
     }
@@ -169,6 +206,10 @@ public class XMLParser {
 
     public List<Assertion> getMyAsserts() {
         return myAsserts;
+    }
+    
+    public AssertNode getMyRequirements() {
+        return myRequirements;
     }
 
 }
