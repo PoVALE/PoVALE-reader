@@ -82,7 +82,7 @@ public class XMLParser {
         defaultMessages.put("and", "Se deben cumplir las siguientes condiciones:");
         defaultMessages.put("or", "Debe cumplirse al menos una de las siguientes condiciones:");
         defaultMessages.put("entail", "El elemento 1 implica al elemento 2");
-        defaultMessages.put("equals", "El elemento 1 no es igual al elemento 2");
+        defaultMessages.put("equals", "El elemento 1 es igual al elemento 2");
         defaultMessages.put("exist", "Existe un elemento X que cumple:");
         defaultMessages.put("existOne", "Existe solo un elemento X que cumple:");
         defaultMessages.put("forAll", "Para todo elemento X cumple:");
@@ -168,19 +168,19 @@ public class XMLParser {
                 Map<String,String> parameters = new HashMap<>();
                 if(nol.getLength() == 5){
                     NodeList params = nol.item(var.get(4)).getChildNodes();
-                        if(params.getLength() > 0) 
+                        if(params.getLength() > 0)
+                        {
                             for(int j = 0 ; j < params.getLength(); i++) 
+                            {
                                 if(!params.item(i).getNodeName().equalsIgnoreCase("#text")){
                                     Element e = (Element)params.item(i);
                                     String key = e.getTagName();
                                     parameters.put(key, e.getAttribute(key));
                                 }
-                    if (parameters.isEmpty())
-                        myVars.add(new Var(label, name, description, entityType));
-                    else{
+                            }
                         myVars.add(new Var(label, name, description, entityType, parameters));
-                    }
-                } else{
+                        }
+                }else{
                     myVars.add(new Var(label, name, description, entityType));
                 }
             }
