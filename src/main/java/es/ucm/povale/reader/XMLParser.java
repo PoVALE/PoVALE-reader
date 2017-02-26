@@ -5,7 +5,7 @@
  */
 package es.ucm.povale.reader;
 
-import es.ucm.povale.Var;
+import es.ucm.povale.variable.Var;
 import es.ucm.povale.assertInformation.AssertInformation;
 import java.io.IOException;
 import java.util.ArrayList;
