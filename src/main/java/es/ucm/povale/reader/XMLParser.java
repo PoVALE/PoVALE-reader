@@ -44,6 +44,7 @@ public class XMLParser {
     private Map<String, Function<Element, AssertNode>> assertsMap;
     private AssertNode myRequirements;
     private Map<String, String> defaultMessages;
+    private String mySpecName;
     
     public XMLParser() {
 
@@ -52,7 +53,7 @@ public class XMLParser {
         this.myVars = new LinkedList();
         myRequirements = new AssertNode(null, "Se deben cumplir los siguientes requisitos:");
         this.rootFile = "";
-
+        this.mySpecName="";
         this.termsMap = new HashMap<>();
         TermParser termParser = new TermParser();
         termsMap.put("variable", termParser::createVariable);
@@ -100,6 +101,7 @@ public class XMLParser {
             Element document = dom.getDocumentElement();
             readPlugins(document);
             readRootFile(document);
+            readSpecName(document);
             readVars(document);
             readRootAssertion(document);
         } catch (ParserConfigurationException | SAXException | IOException pce) {
@@ -188,12 +190,17 @@ public class XMLParser {
     }
 
     private void readRootFile(Element document) {
-
         NodeList nl = document.getElementsByTagName("rootFile");
         if (nl != null && nl.getLength() > 0) {
             this.rootFile = nl.item(0).getTextContent();
         }
-
+    }
+    
+    private void readSpecName(Element document) {
+        NodeList nl = document.getElementsByTagName("specName");
+        if (nl != null && nl.getLength() > 0) {
+            this.mySpecName = nl.item(0).getTextContent();
+        }
     }
 
     public List<Var> getMyVars() {
@@ -210,6 +217,14 @@ public class XMLParser {
     
     public AssertNode getMyRequirements() {
         return myRequirements;
+    }
+    
+    public String getMySpecName(){
+        return this.mySpecName;
+    }
+    
+    public String getRootFile(){
+        return this.rootFile;
     }
 
 }
