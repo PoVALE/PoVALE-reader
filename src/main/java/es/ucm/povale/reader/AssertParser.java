@@ -37,15 +37,22 @@ public class AssertParser {
             return null;
         return message;
     }
+    
     public AssertNode createAssertFalse(Element el) {
         String message = getMessage(el);
         Assertion assertion = new AssertFalse(message);
+        /*if(message == null){
+            message = "Nunca se cumple esta condicion";
+        }*/
         return new AssertNode(assertion, message);
     }
 
     public AssertNode createAssertTrue(Element el) {
         String message = getMessage(el);
         Assertion assertion = new AssertTrue(message);
+        /*if(message == null){
+            message = "Siempre se cumple esta condicion";
+        }*/
         return new AssertNode(assertion, message);
     }
 
@@ -53,7 +60,11 @@ public class AssertParser {
         XMLParser parser = new XMLParser();
         NodeList nl = el.getChildNodes();
         String message = getMessage(el);
+
         AssertNode notNode = new AssertNode(null,message);
+        /*if(message == null){
+            notNode.setMessage("No se debe cumplir la siguiente condicion:");
+        }*/
         AssertNode child; 
         Assertion notAssertion;
         
@@ -92,7 +103,9 @@ public class AssertParser {
         
         andAssertion = new And(assertions, message);
         andNode.setAssertion(andAssertion);
-        
+        /*if(message == null){
+            andNode.setMessage("Se deben cumplir las siguientes condiciones:");
+        }*/
         return andNode;
     }
 
@@ -119,7 +132,9 @@ public class AssertParser {
         
         orAssertion = new Or(assertions, message);
         orNode.setAssertion(orAssertion);
-        
+        /*if(message == null){
+            orNode.setMessage("Debe cumplirse al menos una de las siguientes condiciones:");
+        }*/
         return orNode;
     }
 
@@ -159,7 +174,9 @@ public class AssertParser {
         
         entailAssertion = new Entail(leftAssert, rightAssert, message);
         entailNode.setAssertion(entailAssertion);
-        
+        /*if(message == null){
+            entailNode.setMessage(leftAssert.toString() + " implica a " + rightAssert.toString());
+        }*/
         return entailNode;
     }
 
@@ -193,7 +210,9 @@ public class AssertParser {
         }
         equalsAssertion = new Equals(leftTerm, rightTerm, message);
         equalsNode.setAssertion(equalsAssertion);
-        
+        /*if(message == null){
+            equalsNode.setMessage(leftTerm.evaluate(null) + " es igual a " + rightTerm.evaluate(null));
+        }*/
         return equalsNode;
     }
 
@@ -224,7 +243,10 @@ public class AssertParser {
         
         existAssertion = new Exist(variable, term, assertion, message);
         existNode.setAssertion(existAssertion);
-        
+        /*if(message == null){
+            existNode.setMessage("Existe un elemento " + variable + " en " + term.toString() +
+                " tal que cumple: ");
+        }*/
         return existNode;
     }
 
@@ -254,6 +276,10 @@ public class AssertParser {
         }
         existOneAssertion = new ExistOne(variable, term, assertion, message);
         existOneNode.setAssertion(existOneAssertion);
+        /*if(message == null){
+            existOneNode.setMessage("Existe solo un elemento " + variable + " en " + term.toString() +
+                " tal que cumple: ");
+        }*/
         return existOneNode;
     }
 
@@ -284,7 +310,10 @@ public class AssertParser {
         
         forAllAssertion = new ForAll(variable, term, assertion, message);
         forAllNode.setAssertion(forAllAssertion);
-        
+        /*if(message == null){
+            forAllNode.setMessage("Para todo elemento " + variable + " en " + term.toString() +
+                " cumple: ");
+        }*/
         return forAllNode;
     }
 
@@ -318,6 +347,16 @@ public class AssertParser {
         
         predicateApplicationAssertion = new PredicateApplication(predicate, predicateTerms, message);
         predicateApplicationNode.setAssertion(predicateApplicationAssertion);
+       /* if(message == null){
+                    List<Entity> list = new LinkedList();
+        Environment auxEnv = new Environment();
+        predicateTerms.stream().forEach((t) -> {
+            list.add(t.evaluate(auxEnv));
+        });
+        
+        Predicate p = auxEnv.getPredicate(predicate);
+        //predicateApplicationNode.setMessage(list.get(0).toString() + p.getMessage(list.toArray(new Entity[list.size()])));
+        }*/
         return predicateApplicationNode;
     }
 

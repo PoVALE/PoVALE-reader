@@ -6,7 +6,6 @@
 package es.ucm.povale.reader;
 
 import es.ucm.povale.variable.Var;
-import es.ucm.povale.assertInformation.AssertInformation;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -82,7 +81,7 @@ public class XMLParser {
         defaultMessages.put("not", "No se debe cumplir la siguiente condicion:");
         defaultMessages.put("and", "Se deben cumplir las siguientes condiciones:");
         defaultMessages.put("or", "Debe cumplirse al menos una de las siguientes condiciones:");
-        defaultMessages.put("entail", "El elemento 1 implica al elemento 2");
+        defaultMessages.put("entail", "El elemento 1 implica al elemento 2 ");
         defaultMessages.put("equals", "El elemento 1 es igual al elemento 2");
         defaultMessages.put("exist", "Existe un elemento X que cumple:");
         defaultMessages.put("existOne", "Existe solo un elemento X que cumple:");
