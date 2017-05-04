@@ -23,6 +23,10 @@ import es.ucm.povale.assertion.ForAll;
 import es.ucm.povale.assertion.Not;
 import es.ucm.povale.assertion.Or;
 import es.ucm.povale.assertion.PredicateApplication;
+import es.ucm.povale.environment.Environment;
+import es.ucm.povale.function.Function;
+import es.ucm.povale.predicate.Predicate;
+import es.ucm.povale.term.FunctionApplication;
 import es.ucm.povale.term.Term;
 
 /**
@@ -38,40 +42,44 @@ public class AssertParser {
         return message;
     }
     
-    public AssertNode createAssertFalse(Element el) {
+    public AssertNode createAssertFalse(List<Object> list) {
+        Element el = (Element)list.get(0);
         String message = getMessage(el);
         Assertion assertion = new AssertFalse(message);
-        /*if(message == null){
+        if(message == null){
             message = "Nunca se cumple esta condicion";
-        }*/
+        }
         return new AssertNode(assertion, message);
     }
 
-    public AssertNode createAssertTrue(Element el) {
+    public AssertNode createAssertTrue(List<Object> list) {
+        Element el = (Element)list.get(0);
         String message = getMessage(el);
         Assertion assertion = new AssertTrue(message);
-        /*if(message == null){
+        if(message == null){
             message = "Siempre se cumple esta condicion";
-        }*/
+        }
         return new AssertNode(assertion, message);
     }
 
-    public AssertNode createNotAssert(Element el) {
+    public AssertNode createNotAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList nl = el.getChildNodes();
         String message = getMessage(el);
 
         AssertNode notNode = new AssertNode(null,message);
-        /*if(message == null){
+        if(message == null){
             notNode.setMessage("No se debe cumplir la siguiente condicion:");
-        }*/
+        }
         AssertNode child; 
         Assertion notAssertion;
         
         if (nl != null && nl.getLength() > 0) {
             for (int i = 0; i < nl.getLength(); i++) {
                 if (!nl.item(i).getNodeName().equalsIgnoreCase("#text")) {
-                    child = parser.getAssertion((Element) nl.item(i));
+                    child = parser.getAssertion((Element) nl.item(i), env);
                     notAssertion = new Not(child.getAssertion(), message);
                     notNode.setAssertion(notAssertion);
                     notNode.addChild(child);
@@ -81,7 +89,9 @@ public class AssertParser {
         return notNode;
     }
 
-    public AssertNode createAndAssert(Element el) {
+    public AssertNode createAndAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList nl = el.getChildNodes();
         String message = getMessage(el);
@@ -94,7 +104,7 @@ public class AssertParser {
             for (int i = 0; i < nl.getLength(); i++) {
                 if (!nl.item(i).getNodeName().equalsIgnoreCase("#text")) {
                     Element e = (Element) nl.item(i);
-                    child = parser.getAssertion(e);
+                    child = parser.getAssertion(e, env);
                     assertions.add(child.getAssertion());
                     andNode.addChild(child);
                 }
@@ -103,14 +113,15 @@ public class AssertParser {
         
         andAssertion = new And(assertions, message);
         andNode.setAssertion(andAssertion);
-        /*if(message == null){
+        if(message == null){
             andNode.setMessage("Se deben cumplir las siguientes condiciones:");
-        }*/
+        }
         return andNode;
     }
 
-    public AssertNode createOrAssert(Element el) {
-        
+    public AssertNode createOrAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList nl = el.getChildNodes();
         String message = getMessage(el);
@@ -123,7 +134,7 @@ public class AssertParser {
             for (int i = 0; i < nl.getLength(); i++) {
                 if (!nl.item(i).getNodeName().equalsIgnoreCase("#text")) {
                     Element e = (Element) nl.item(i);
-                    child = parser.getAssertion(e);
+                    child = parser.getAssertion(e, env);
                     assertions.add(child.getAssertion());
                     orNode.addChild(child);
                 }
@@ -132,13 +143,15 @@ public class AssertParser {
         
         orAssertion = new Or(assertions, message);
         orNode.setAssertion(orAssertion);
-        /*if(message == null){
+        if(message == null){
             orNode.setMessage("Debe cumplirse al menos una de las siguientes condiciones:");
-        }*/
+        }
         return orNode;
     }
 
-    public AssertNode createEntailAssert(Element el) {
+    public AssertNode createEntailAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList nodeList = el.getChildNodes();
         Element element = null;
@@ -157,11 +170,11 @@ public class AssertParser {
                         for (int j = 0; j < asserts.getLength(); j++) {
                             if (!asserts.item(j).getNodeName().equalsIgnoreCase("#text")) {
                                 if (leftAssert == null) {
-                                    child = parser.getAssertion((Element) asserts.item(j));
+                                    child = parser.getAssertion((Element) asserts.item(j), env);
                                     leftAssert = child.getAssertion();
                                     entailNode.addChild(child);
                                 } else {
-                                    child = parser.getAssertion((Element) asserts.item(j));
+                                    child = parser.getAssertion((Element) asserts.item(j), env);
                                     rightAssert = child.getAssertion();
                                     entailNode.addChild(child);
                                 }
@@ -174,13 +187,16 @@ public class AssertParser {
         
         entailAssertion = new Entail(leftAssert, rightAssert, message);
         entailNode.setAssertion(entailAssertion);
-        /*if(message == null){
-            entailNode.setMessage(leftAssert.toString() + " implica a " + rightAssert.toString());
-        }*/
+        if(message == null){
+            entailNode.setMessage(entailNode.getChildren().get(0).getMessage() + " implica a " 
+                    + entailNode.getChildren().get(1).getMessage());
+        }
         return entailNode;
     }
 
-    public AssertNode createEqualsAssert(Element el) {
+    public AssertNode createEqualsAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList nodeList = el.getChildNodes();
         Element element = null;
@@ -210,13 +226,17 @@ public class AssertParser {
         }
         equalsAssertion = new Equals(leftTerm, rightTerm, message);
         equalsNode.setAssertion(equalsAssertion);
-        /*if(message == null){
-            equalsNode.setMessage(leftTerm.evaluate(null) + " es igual a " + rightTerm.evaluate(null));
-        }*/
+        if(message == null){
+            String lTerm = getStringTerm(leftTerm, env);
+            String rTerm = getStringTerm(rightTerm, env);
+            equalsNode.setMessage(lTerm + " es igual a " + rTerm);
+        }
         return equalsNode;
     }
 
-    public AssertNode createExistAssert(Element el) {
+    public AssertNode createExistAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList existElements = el.getChildNodes();
         String variable = null;
@@ -236,21 +256,24 @@ public class AssertParser {
             }
             variable = existElements.item(existPos.get(0)).getTextContent();
             term = parser.getTerm((Element) existElements.item(existPos.get(1)));
-            child = parser.getAssertion((Element) existElements.item(existPos.get(2)));
+            child = parser.getAssertion((Element) existElements.item(existPos.get(2)), env);
             assertion = child.getAssertion();
             existNode.addChild(child);
         }
         
         existAssertion = new Exist(variable, term, assertion, message);
         existNode.setAssertion(existAssertion);
-        /*if(message == null){
-            existNode.setMessage("Existe un elemento " + variable + " en " + term.toString() +
+        if(message == null){
+            String stringTerm = getStringTerm(term, env);
+            existNode.setMessage("Existe un elemento " + variable + " en " + stringTerm +
                 " tal que cumple: ");
-        }*/
+        }
         return existNode;
     }
 
-    public AssertNode createExistOneAssert(Element el) {
+    public AssertNode createExistOneAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList existElements = el.getChildNodes();
         String variable = null;
@@ -270,20 +293,24 @@ public class AssertParser {
             }
             variable = existElements.item(existPos.get(0)).getTextContent();
             term = parser.getTerm((Element) existElements.item(existPos.get(1)));
-            child = parser.getAssertion((Element) existElements.item(existPos.get(2)));
+            child = parser.getAssertion((Element) existElements.item(existPos.get(2)), env);
             assertion = child.getAssertion();
             existOneNode.addChild(child);
         }
         existOneAssertion = new ExistOne(variable, term, assertion, message);
         existOneNode.setAssertion(existOneAssertion);
-        /*if(message == null){
-            existOneNode.setMessage("Existe solo un elemento " + variable + " en " + term.toString() +
+        
+        if(message == null){
+            String stringTerm = getStringTerm(term, env);
+            existOneNode.setMessage("Existe solo un elemento " + variable + " en " + stringTerm +
                 " tal que cumple: ");
-        }*/
+        }
         return existOneNode;
     }
 
-    public AssertNode createForAllAssert(Element el) {
+    public AssertNode createForAllAssert(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         NodeList forAllElements = el.getChildNodes();
         String variable = null;
@@ -303,21 +330,25 @@ public class AssertParser {
             }
             variable = forAllElements.item(existPos.get(0)).getTextContent();
             term = parser.getTerm((Element) forAllElements.item(existPos.get(1)));
-            child = parser.getAssertion((Element) forAllElements.item(existPos.get(2)));
+            child = parser.getAssertion((Element) forAllElements.item(existPos.get(2)), env);
             assertion = child.getAssertion();
             forAllNode.addChild(child);
         }
         
         forAllAssertion = new ForAll(variable, term, assertion, message);
         forAllNode.setAssertion(forAllAssertion);
-        /*if(message == null){
-            forAllNode.setMessage("Para todo elemento " + variable + " en " + term.toString() +
+
+        if(message == null){
+            String stringTerm = getStringTerm(term, env);
+            forAllNode.setMessage("Para todo elemento " + variable + " en " + stringTerm +
                 " cumple: ");
-        }*/
+        }
         return forAllNode;
     }
 
-    public AssertNode createPredicateApplication(Element el) {
+    public AssertNode createPredicateApplication(List<Object> list) {
+        Element el = (Element)list.get(0);
+        Environment env = (Environment) list.get(1);
         XMLParser parser = new XMLParser();
         String predicate = null;
         List<Term> predicateTerms = new LinkedList();
@@ -347,17 +378,42 @@ public class AssertParser {
         
         predicateApplicationAssertion = new PredicateApplication(predicate, predicateTerms, message);
         predicateApplicationNode.setAssertion(predicateApplicationAssertion);
-       /* if(message == null){
-                    List<Entity> list = new LinkedList();
-        Environment auxEnv = new Environment();
-        predicateTerms.stream().forEach((t) -> {
-            list.add(t.evaluate(auxEnv));
-        });
-        
-        Predicate p = auxEnv.getPredicate(predicate);
-        //predicateApplicationNode.setMessage(list.get(0).toString() + p.getMessage(list.toArray(new Entity[list.size()])));
-        }*/
+        if(message == null){
+            Predicate p = env.getPredicate(predicate);
+            message="";
+            for(Term t: predicateTerms){
+                if(predicateTerms.size()==1){
+                    message+=predicateTerms.get(0).toString()+" ";
+                }
+                message+=t.toString()+", ";
+            }
+            String aux[] = p.getParamDescriptions();
+            for(String s: aux){
+                if(s != null){
+                    message+=s;
+                }
+            }
+        }
+        predicateApplicationNode.setMessage(message);
         return predicateApplicationNode;
+    }
+
+    private String getStringTerm(Term term, Environment env) {
+        String stringTerm;
+        if(term.getClass()!= FunctionApplication.class){
+            stringTerm = term.toString();
+        }else{
+            FunctionApplication aux = (FunctionApplication)term;
+            Function f = env.getFunction(aux.getFunction());
+            stringTerm="";
+            String auxS[] = f.getParamDescriptions();
+            for(String s: auxS){
+                if(s != null){
+                    stringTerm+=s;
+                }
+            }  
+        }
+        return stringTerm;
     }
 
 }

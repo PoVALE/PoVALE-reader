@@ -26,6 +26,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import es.ucm.povale.assertion.Assertion;
+import es.ucm.povale.environment.Environment;
+import es.ucm.povale.plugin.Import;
 import es.ucm.povale.term.Term;
 import java.io.InputStream;
 
@@ -40,7 +42,7 @@ public class XMLParser {
     private String rootFile;
     private List<Assertion> myAsserts;
     private Map<String, Function<Element, Term>> termsMap;
-    private Map<String, Function<Element, AssertNode>> assertsMap;
+    private Map<String, Function<List<Object>, AssertNode>> assertsMap;
     private AssertNode myRequirements;
     private Map<String, String> defaultMessages;
     private String mySpecName;
@@ -74,20 +76,6 @@ public class XMLParser {
         assertsMap.put("existOne", assertParser::createExistOneAssert);
         assertsMap.put("forAll", assertParser::createForAllAssert);
         assertsMap.put("predicateApplication", assertParser::createPredicateApplication);
-        
-        this.defaultMessages = new HashMap<>();
-        defaultMessages.put("assertFalse", "Nunca se cumple esta condicion");
-        defaultMessages.put("assertTrue", "Siempre se cumple esta condicion");
-        defaultMessages.put("not", "No se debe cumplir la siguiente condicion:");
-        defaultMessages.put("and", "Se deben cumplir las siguientes condiciones:");
-        defaultMessages.put("or", "Debe cumplirse al menos una de las siguientes condiciones:");
-        defaultMessages.put("entail", "El elemento 1 implica al elemento 2 ");
-        defaultMessages.put("equals", "El elemento 1 es igual al elemento 2");
-        defaultMessages.put("exist", "Existe un elemento X que cumple:");
-        defaultMessages.put("existOne", "Existe solo un elemento X que cumple:");
-        defaultMessages.put("forAll", "Para todo elemento X cumple:");
-        defaultMessages.put("predicateApplication", "Funcion de predicado...");
-
     }
 
     public void parseXMLFile(InputStream is) {
@@ -115,16 +103,26 @@ public class XMLParser {
         return t;
     }
 
-    protected AssertNode getAssertion(Element element) {
+    
+    //El element del XML lo guardaremos en la POSICION 0 de la lista de objetos
+    //El environment necesario para algunos asertos y terminos lo guardaremos en
+        //la POSICION 1 de la lista de objetos 
+    protected AssertNode getAssertion(Element element, Environment env) {
         String assertion = element.getTagName();
-        Function<Element, AssertNode> assertParserFunction = this.assertsMap.get(assertion);
-        AssertNode a = assertParserFunction.apply(element);
-        if (a.getMessage() == null)
-            a.setMessage(this.defaultMessages.get(assertion));
+        //Function<Element, AssertNode> assertParserFunction = this.assertsMap.get(assertion);
+        Function<List<Object>, AssertNode> assertParserFunction = this.assertsMap.get(assertion);
+        List<Object> list= new LinkedList();
+        list.add(0,element);
+        list.add(1, env);
+        AssertNode a = assertParserFunction.apply(list);
         return a;
     }
 
     private void readRootAssertion(Element document) {
+        Environment envAux = new Environment();
+        for (String a : myPlugins) {
+            Import plugin = new Import(a, envAux);
+        }
         NodeList nl = document.getElementsByTagName("assert");
         if (nl != null && nl.getLength() > 0) {
             for (int i = 0; i < nl.getLength(); i++) {
@@ -132,7 +130,7 @@ public class XMLParser {
                 for (int j = 0; j < nol.getLength(); j++) {
                     if (!nol.item(j).getNodeName().equalsIgnoreCase("#text")) {
                         Element el = (Element) nol.item(j);       
-                        AssertNode assertNode = getAssertion(el);
+                        AssertNode assertNode = getAssertion(el, envAux);
                         Assertion a = assertNode.getAssertion();
                         myAsserts.add(a);
                         myRequirements.addChild(assertNode);
