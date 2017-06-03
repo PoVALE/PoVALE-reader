@@ -385,7 +385,9 @@ public class AssertParser {
                 if(predicateTerms.size()==1){
                     message+=predicateTerms.get(0).toString()+" ";
                 }
-                message+=t.toString()+", ";
+                else{
+                    message+=t.toString()+", ";
+                }
             }
             String aux[] = p.getParamDescriptions();
             for(String s: aux){
